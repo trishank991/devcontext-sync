@@ -1,0 +1,160 @@
+DevContext Sync - Your AI Coding Memory, Everywhere
+
+Stop re-explaining your codebase every time you switch AI tools. DevContext Sync keeps your project context, code snippets, and AI conversations synchronized between your browser and IDE.
+
+THE PROBLEM
+
+Developers waste 5+ hours per week re-explaining project context to AI assistants. You spend 20 minutes explaining your architecture to ChatGPT. Then you need Claude for a different task. Back to square one. Switch to VS Code Copilot? Start over again.
+
+Your AI assistants have amnesia. DevContext Sync gives them memory.
+
+THE SOLUTION
+
+DevContext Sync creates a persistent layer between you and your AI tools. Save context once, use it everywhere. Your project architecture, coding conventions, and past solutions travel with you across ChatGPT, Claude, VS Code, and Cursor.
+
+KEY FEATURES
+
+Project-Based Context Isolation
+- Create separate contexts for each project
+- Your React frontend context never bleeds into your Python backend
+- Switch projects instantly with the right context loaded
+- Store architecture notes, tech stack details, and coding conventions
+
+Searchable Knowledge Base
+- Every AI conversation becomes searchable documentation
+- Find that solution from three months ago in seconds
+- Full-text search across all saved contexts and snippets
+- Tag and organize by project, language, or topic
+
+Code Snippet Library
+- Save code from AI conversations with one click
+- Snippets sync instantly to VS Code and Cursor
+- Organize with tags and project associations
+- Quick access from the extension popup or IDE
+
+IDE Integration
+- Native VS Code extension included
+- Cursor editor support
+- Access your snippet library directly in your editor
+- Insert saved code with keyboard shortcuts
+- Context available in editor sidepanel
+
+HOW IT WORKS
+
+1. Install DevContext Sync in Chrome
+2. Install the companion extension in VS Code or Cursor
+3. Create a project and add your context notes
+4. Use ChatGPT or Claude normally
+5. Save useful responses and code snippets with one click
+6. Access everything from your browser or IDE
+
+SUPPORTED PLATFORMS
+
+Browser:
+- ChatGPT (chat.openai.com)
+- Claude (claude.ai)
+
+IDE:
+- Visual Studio Code
+- Cursor
+
+Coming soon: Gemini, Perplexity, JetBrains IDEs
+
+PRICING
+
+Free (forever):
+- 2 project contexts
+- 50 saved snippets
+- Browser to IDE sync
+- Basic search
+
+Pro ($12/month):
+- Unlimited projects
+- Unlimited snippets
+- Full searchable history
+- Export to Markdown/JSON
+- Priority support
+
+Team ($19/user/month):
+- Everything in Pro
+- Shared team contexts
+- Team knowledge base
+- Admin dashboard
+- SSO and audit logs
+
+PRIVACY AND SECURITY
+
+Your data is yours:
+- All data encrypted at rest and in transit
+- We never train on your data
+- We never share your data with third parties
+- Export all your data anytime
+- Delete your account and data anytime
+- Self-hosted option for enterprise customers
+
+Minimal permissions:
+- We only request permissions necessary for functionality
+- No access to browsing history
+- No access to other tabs or websites
+- Read access limited to ChatGPT and Claude domains
+
+WHO IS THIS FOR?
+
+- Indie developers working across multiple projects
+- Developers who use multiple AI coding assistants
+- Small teams who want to share AI-generated knowledge
+- Anyone tired of repeating themselves to AI tools
+
+WHAT USERS SAY
+
+"I didn't realize how much time I was wasting until I stopped wasting it. DevContext Sync is one of those tools you don't know you need until you have it."
+
+"Finally, my AI conversations aren't throwaway. Being able to search through past solutions has saved me hours."
+
+"The project isolation feature alone is worth it. No more accidentally getting Python suggestions in my JavaScript project."
+
+FREQUENTLY ASKED QUESTIONS
+
+Q: Does this slow down ChatGPT or Claude?
+A: No. DevContext Sync operates passively and only activates when you explicitly save content. No performance impact on the AI interfaces.
+
+Q: What data do you collect?
+A: Only the contexts and snippets you explicitly save. We don't track your conversations unless you save them. See our privacy policy for details.
+
+Q: Can I use this with my company's enterprise AI account?
+A: Yes. DevContext Sync works with any ChatGPT or Claude account, including enterprise accounts.
+
+Q: Is there a limit on how much I can save?
+A: Free tier: 2 projects, 50 snippets. Pro tier: Unlimited. We don't artificially limit storage.
+
+Q: What happens to my data if I cancel?
+A: Your data remains accessible for 30 days after cancellation. You can export everything before deletion.
+
+Q: Do you offer refunds?
+A: Yes. 30-day money-back guarantee, no questions asked.
+
+SUPPORT
+
+Documentation: docs.devcontextsync.com
+Email: support@devcontextsync.com
+Twitter: @devcontextsync
+
+REQUIREMENTS
+
+- Chrome browser (version 88 or later)
+- VS Code 1.60+ or Cursor (for IDE features)
+- Internet connection for sync functionality
+
+VERSION HISTORY
+
+v1.0.0 - Initial release
+- ChatGPT and Claude support
+- VS Code and Cursor extensions
+- Project-based context management
+- Code snippet library
+- Full-text search
+- Export functionality
+
+Get started free. No credit card required.
+
+Install DevContext Sync and stop losing your AI coding context.

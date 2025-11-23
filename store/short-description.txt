@@ -1,0 +1,1 @@
+Sync AI coding context between ChatGPT, Claude, and your IDE. Save snippets, search conversations, never re-explain your code.

@@ -1,0 +1,74 @@
+{
+  "name": "devcontext-sync",
+  "displayName": "DevContext Sync",
+  "description": "Sync AI context between browser and IDE - receive context from Chrome extension",
+  "version": "0.1.0",
+  "publisher": "devcontext",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "context",
+    "cursor",
+    "continue",
+    "sync"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devcontext-sync.importContext",
+        "title": "DevContext: Import Context"
+      },
+      {
+        "command": "devcontext-sync.showContext",
+        "title": "DevContext: Show Context"
+      },
+      {
+        "command": "devcontext-sync.clearContext",
+        "title": "DevContext: Clear Context"
+      }
+    ],
+    "configuration": {
+      "title": "DevContext Sync",
+      "properties": {
+        "devcontextSync.contextFilePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the context JSON file exported from Chrome extension"
+        },
+        "devcontextSync.autoImport": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically import context when file changes"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devcontext/devcontext-sync"
+  },
+  "license": "MIT"
+}

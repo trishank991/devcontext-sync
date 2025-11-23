@@ -1,0 +1,80 @@
+# CodeRabbit Configuration
+# Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: "en-US"
+
+early_access: false
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - master
+
+  path_instructions:
+    - path: "**/*.js"
+      instructions: |
+        Review JavaScript code for:
+        - Chrome extension best practices (Manifest V3 compatibility)
+        - Proper async/await and Promise handling
+        - Memory leaks in event listeners and MutationObservers
+        - XSS vulnerabilities when handling user content
+        - Proper error handling in chrome.* API calls
+
+    - path: "**/*.ts"
+      instructions: |
+        Review TypeScript code for:
+        - VS Code extension API best practices
+        - Proper type safety and avoid 'any' types
+        - Async/await error handling
+        - Resource disposal in deactivate()
+        - File system error handling
+
+    - path: "vscode-extension/**"
+      instructions: |
+        This is a VS Code extension. Review for:
+        - Proper activation events
+        - Command registration and disposal
+        - Workspace state management
+        - Extension context lifecycle
+
+    - path: "content.js"
+      instructions: |
+        This is a content script injected into ChatGPT and Claude.ai pages.
+        Review for:
+        - DOM manipulation safety
+        - Memory leaks from MutationObservers
+        - Proper cleanup of injected elements
+        - Cross-site scripting prevention
+
+    - path: "background.js"
+      instructions: |
+        This is a Manifest V3 service worker.
+        Review for:
+        - Service worker lifecycle compatibility
+        - Proper message passing patterns
+        - Context menu handling
+        - Storage API usage
+
+    - path: "payments.js"
+      instructions: |
+        Payment and licensing module.
+        Review for:
+        - Security of license validation
+        - No hardcoded secrets
+        - Proper error handling
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: "auto"

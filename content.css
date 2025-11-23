@@ -1,0 +1,96 @@
+.devcontext-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(88, 166, 255, 0.1);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  border-radius: 4px;
+  color: #58a6ff;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  z-index: 1000;
+}
+
+.devcontext-save-btn:hover {
+  background: rgba(88, 166, 255, 0.2);
+  border-color: #58a6ff;
+}
+
+.devcontext-menu-wrapper {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 1000;
+}
+
+.devcontext-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 4px;
+  min-width: 160px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.devcontext-menu.hidden {
+  display: none;
+}
+
+.devcontext-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  color: #e6edf3;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.devcontext-menu-item:hover {
+  background: #21262d;
+}
+
+.devcontext-menu-item svg {
+  flex-shrink: 0;
+}
+
+.devcontext-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  background: #161b22;
+  border: 1px solid #3fb950;
+  border-radius: 6px;
+  color: #3fb950;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  animation: devcontext-slide-in 0.2s ease;
+}
+
+.devcontext-notification.error {
+  border-color: #f85149;
+  color: #f85149;
+}
+
+@keyframes devcontext-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
