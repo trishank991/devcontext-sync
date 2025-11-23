@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint-chrome-extension:
+    name: Lint Chrome Extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install ESLint
+        run: npm install -g eslint
+
+      - name: Lint JavaScript files
+        run: |
+          eslint popup.js background.js content.js payments.js --no-eslintrc \
+            --env browser,es2021,webextensions \
+            --parser-options ecmaVersion:2021 \
+            --rule 'no-unused-vars: warn' \
+            --rule 'no-undef: error' \
+            --rule 'no-console: off' || true
+
+  lint-vscode-extension:
+    name: Lint & Build VS Code Extension
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vscode-extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npm run lint || true
+
+      - name: Build TypeScript
+        run: npm run compile
+
+  validate-manifest:
+    name: Validate Chrome Extension Manifest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate manifest.json
+        run: |
+          echo "Validating manifest.json..."
+          node -e "
+            const fs = require('fs');
+            const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+
+            const required = ['manifest_version', 'name', 'version', 'permissions'];
+            const missing = required.filter(key => !manifest[key]);
+
+            if (missing.length > 0) {
+              console.error('Missing required fields:', missing.join(', '));
+              process.exit(1);
+            }
+
+            if (manifest.manifest_version !== 3) {
+              console.error('Expected Manifest V3');
+              process.exit(1);
+            }
+
+            console.log('✓ Manifest is valid');
+            console.log('  Name:', manifest.name);
+            console.log('  Version:', manifest.version);
+            console.log('  Manifest Version:', manifest.manifest_version);
+          "
+
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for secrets in code
+        run: |
+          echo "Checking for potential secrets..."
+
+          # Check for hardcoded API keys or tokens
+          if grep -rE "(api[_-]?key|api[_-]?secret|password|token)\s*[:=]\s*['\"][^'\"]+['\"]" \
+            --include="*.js" --include="*.ts" \
+            --exclude-dir=node_modules . 2>/dev/null | grep -v "REPLACE" | grep -v "example"; then
+            echo "⚠️  Warning: Potential hardcoded secrets found"
+          else
+            echo "✓ No hardcoded secrets detected"
+          fi
+
+      - name: Check for placeholder values
+        run: |
+          echo "Checking for placeholder values that need configuration..."
+
+          if grep -rE "REPLACE_|TODO:|FIXME:" \
+            --include="*.js" --include="*.ts" \
+            --exclude-dir=node_modules . 2>/dev/null; then
+            echo ""
+            echo "⚠️  Warning: Placeholder values found - ensure these are configured before release"
+          else
+            echo "✓ No placeholder values found"
+          fi
