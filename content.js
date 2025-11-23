@@ -240,11 +240,15 @@
       }
     });
 
-    document.addEventListener('click', (e) => {
+    const closeMenuHandler = (e) => {
       if (!wrapper.contains(e.target)) {
         menu.classList.add('hidden');
       }
-    });
+    };
+    document.addEventListener('click', closeMenuHandler);
+
+    // Store handler reference for potential cleanup
+    wrapper._closeMenuHandler = closeMenuHandler;
 
     wrapper.appendChild(btn);
     wrapper.appendChild(menu);

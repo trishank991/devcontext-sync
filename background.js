@@ -48,12 +48,23 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
+    let hostname = 'unknown';
+    let sourceUrl = '';
+    try {
+      if (tab.url) {
+        hostname = new URL(tab.url).hostname;
+        sourceUrl = tab.url;
+      }
+    } catch (e) {
+      // Invalid URL, use defaults
+    }
+
     if (info.menuItemId === 'devcontext-save-selection') {
       activeProject.knowledge.push({
         id,
-        question: 'Selected text from ' + new URL(tab.url).hostname,
+        question: 'Selected text from ' + hostname,
         answer: info.selectionText,
-        source: tab.url,
+        source: sourceUrl,
         tags: [],
         createdAt: Date.now()
       });
@@ -62,8 +73,8 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         id,
         code: info.selectionText,
         language: 'text',
-        description: 'Selected from ' + new URL(tab.url).hostname,
-        source: tab.url,
+        description: 'Selected from ' + hostname,
+        source: sourceUrl,
         createdAt: Date.now()
       });
     }

@@ -133,7 +133,23 @@ async function writeContextFile(ctx: DevContext): Promise<void> {
     }
 }
 
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function getContextWebviewContent(ctx: DevContext): string {
+    const safeProjectName = escapeHtml(ctx.projectName || 'Project Context');
+    const safeSummary = ctx.summary ? escapeHtml(ctx.summary) : '';
+    const safeNotes = ctx.notes ? escapeHtml(ctx.notes) : '';
+    const safeFiles = ctx.files?.map(f => escapeHtml(f)) || [];
+    const safeDeps = ctx.dependencies?.map(d => escapeHtml(d)) || [];
+    const safeTimestamp = escapeHtml(ctx.timestamp || 'Unknown');
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -150,17 +166,17 @@ function getContextWebviewContent(ctx: DevContext): string {
     </style>
 </head>
 <body>
-    <h1>${ctx.projectName || 'Project Context'}</h1>
+    <h1>${safeProjectName}</h1>
 
-    ${ctx.summary ? `<div class="section"><div class="label">Summary</div><div class="value">${ctx.summary}</div></div>` : ''}
+    ${safeSummary ? `<div class="section"><div class="label">Summary</div><div class="value">${safeSummary}</div></div>` : ''}
 
-    ${ctx.files?.length ? `<div class="section"><div class="label">Files</div><pre>${ctx.files.join('\n')}</pre></div>` : ''}
+    ${safeFiles.length ? `<div class="section"><div class="label">Files</div><pre>${safeFiles.join('\n')}</pre></div>` : ''}
 
-    ${ctx.dependencies?.length ? `<div class="section"><div class="label">Dependencies</div><pre>${ctx.dependencies.join('\n')}</pre></div>` : ''}
+    ${safeDeps.length ? `<div class="section"><div class="label">Dependencies</div><pre>${safeDeps.join('\n')}</pre></div>` : ''}
 
-    ${ctx.notes ? `<div class="section"><div class="label">Notes</div><div class="value">${ctx.notes}</div></div>` : ''}
+    ${safeNotes ? `<div class="section"><div class="label">Notes</div><div class="value">${safeNotes}</div></div>` : ''}
 
-    <div class="section"><div class="label">Imported</div><div class="value">${ctx.timestamp || 'Unknown'}</div></div>
+    <div class="section"><div class="label">Imported</div><div class="value">${safeTimestamp}</div></div>
 </body>
 </html>`;
 }
