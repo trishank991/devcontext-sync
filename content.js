@@ -4,6 +4,7 @@
   const PLATFORM = detectPlatform();
   let observerActive = false;
   let processedElements = new WeakSet();
+  let menuClickListenerAttached = false;
 
   function detectPlatform() {
     const hostname = window.location.hostname;
@@ -240,16 +241,6 @@
       }
     });
 
-    const closeMenuHandler = (e) => {
-      if (!wrapper.contains(e.target)) {
-        menu.classList.add('hidden');
-      }
-    };
-    document.addEventListener('click', closeMenuHandler);
-
-    // Store handler reference for potential cleanup
-    wrapper._closeMenuHandler = closeMenuHandler;
-
     wrapper.appendChild(btn);
     wrapper.appendChild(menu);
 
@@ -309,10 +300,27 @@
     observerActive = true;
   }
 
+  function setupMenuClickListener() {
+    if (menuClickListenerAttached) return;
+
+    // Single delegated listener for closing all menus
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll('.devcontext-menu:not(.hidden)').forEach(menu => {
+        const menuWrapper = menu.closest('.devcontext-menu-wrapper');
+        if (menuWrapper && !menuWrapper.contains(e.target)) {
+          menu.classList.add('hidden');
+        }
+      });
+    }, { capture: true });
+
+    menuClickListenerAttached = true;
+  }
+
   function init() {
     if (!PLATFORM) return;
 
     injectStyles();
+    setupMenuClickListener();
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
