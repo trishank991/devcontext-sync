@@ -1,20 +1,19 @@
-const FREE_TIER_LIMITS = {
-  maxProjects: 2,
-  maxSnippets: 50
-};
+// DevContext Sync - Popup UI
+// Uses message-based API to communicate with background.js
 
-const DEFAULT_DATA = {
-  projects: [],
-  activeProjectId: null,
-  settings: {
-    theme: 'dark',
-    isPremium: false
-  }
+// Beta limits - more generous to encourage adoption
+const FREE_TIER_LIMITS = {
+  maxProjects: 5,      // Was 3, increased for beta
+  maxSnippets: 100,    // Was 50, increased for beta
+  maxKnowledge: 200    // Was 100, increased for beta
 };
 
 class DevContextSync {
   constructor() {
-    this.data = { ...DEFAULT_DATA };
+    this.projects = [];
+    this.activeProject = null;
+    this.settings = {};
+    this.currentOnboardingSlide = 0;
     this.init();
   }
 
@@ -22,28 +21,117 @@ class DevContextSync {
     await this.loadData();
     this.bindEvents();
     this.render();
+    this.updateStorageInfo();
+    this.checkCloudStatus();
+    await this.checkFirstRun();
+  }
+
+  async checkFirstRun() {
+    const result = await this.sendMessage('GET_SETTINGS');
+    if (result.settings?.isFirstRun) {
+      this.showOnboarding();
+    }
+  }
+
+  showOnboarding() {
+    const modal = document.getElementById('onboardingModal');
+    modal.classList.remove('hidden');
+    this.currentOnboardingSlide = 0;
+    this.updateOnboardingSlide();
+  }
+
+  hideOnboarding() {
+    const modal = document.getElementById('onboardingModal');
+    modal.classList.add('hidden');
+    // Mark first run as complete
+    this.sendMessage('UPDATE_SETTING', { key: 'isFirstRun', value: false });
+  }
+
+  updateOnboardingSlide() {
+    const slides = document.querySelectorAll('.onboarding-slide');
+    const dots = document.querySelectorAll('.onboarding-dot');
+    const nextBtn = document.getElementById('nextOnboarding');
+
+    slides.forEach((slide, i) => {
+      slide.classList.toggle('active', i === this.currentOnboardingSlide);
+    });
+
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === this.currentOnboardingSlide);
+    });
+
+    // Change button text on last slide
+    if (this.currentOnboardingSlide === slides.length - 1) {
+      nextBtn.textContent = 'Get Started';
+    } else {
+      nextBtn.textContent = 'Next';
+    }
+  }
+
+  nextOnboardingSlide() {
+    const slides = document.querySelectorAll('.onboarding-slide');
+    if (this.currentOnboardingSlide < slides.length - 1) {
+      this.currentOnboardingSlide++;
+      this.updateOnboardingSlide();
+    } else {
+      this.hideOnboarding();
+    }
+  }
+
+  // ============================================
+  // Data Loading via Messages
+  // ============================================
+
+  async sendMessage(type, data = {}) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timeout = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error('No response from background (timeout)'));
+        }
+      }, 5000);
+
+      try {
+        chrome.runtime.sendMessage({ type, data }, (response) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
+          if (chrome.runtime.lastError) {
+            return reject(chrome.runtime.lastError);
+          }
+          if (typeof response === 'undefined') {
+            return reject(new Error('No response from background'));
+          }
+          resolve(response);
+        });
+      } catch (err) {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          reject(err);
+        }
+      }
+    });
   }
 
   async loadData() {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['devContextData'], (result) => {
-        if (result.devContextData) {
-          this.data = result.devContextData;
-        }
-        resolve();
-      });
-    });
+    const [projectsResult, settingsResult] = await Promise.all([
+      this.sendMessage('GET_ALL_PROJECTS'),
+      this.sendMessage('GET_SETTINGS')
+    ]);
+
+    this.projects = projectsResult.projects || [];
+    this.settings = settingsResult.settings || {};
+
+    // Get active project details
+    const activeResult = await this.sendMessage('GET_ACTIVE_PROJECT');
+    this.activeProject = activeResult.project;
   }
 
-  async saveData() {
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ devContextData: this.data }, resolve);
-    });
-  }
-
-  generateId() {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-  }
+  // ============================================
+  // Event Bindings
+  // ============================================
 
   bindEvents() {
     document.getElementById('projectSelect').addEventListener('change', (e) => {
@@ -70,12 +158,32 @@ class DevContextSync {
       this.exportToVSCode();
     });
 
+    document.getElementById('activityLogBtn').addEventListener('click', () => {
+      this.showActivityLogModal();
+    });
+
+    document.getElementById('backupBtn').addEventListener('click', () => {
+      this.backupAllData();
+    });
+
+    document.getElementById('restoreBtn').addEventListener('click', () => {
+      document.getElementById('restoreFileInput').click();
+    });
+
+    document.getElementById('restoreFileInput').addEventListener('change', (e) => {
+      this.restoreFromFile(e.target.files[0]);
+    });
+
     document.getElementById('upgradeBtn').addEventListener('click', () => {
       this.showUpgradeModal();
     });
 
     document.getElementById('settingsBtn').addEventListener('click', () => {
       this.showSettingsModal();
+    });
+
+    document.getElementById('syncStatusBtn').addEventListener('click', () => {
+      this.showCloudSyncModal();
     });
 
     document.getElementById('closeModalBtn').addEventListener('click', () => {
@@ -87,7 +195,28 @@ class DevContextSync {
         this.hideModal();
       }
     });
+
+    // Onboarding events
+    document.getElementById('skipOnboarding').addEventListener('click', () => {
+      this.hideOnboarding();
+    });
+
+    document.getElementById('nextOnboarding').addEventListener('click', () => {
+      this.nextOnboardingSlide();
+    });
+
+    // Allow clicking dots to navigate
+    document.querySelectorAll('.onboarding-dot').forEach((dot) => {
+      dot.addEventListener('click', () => {
+        this.currentOnboardingSlide = parseInt(dot.dataset.slide);
+        this.updateOnboardingSlide();
+      });
+    });
   }
+
+  // ============================================
+  // Rendering
+  // ============================================
 
   render() {
     this.renderProjectSelector();
@@ -99,11 +228,11 @@ class DevContextSync {
     const select = document.getElementById('projectSelect');
     select.innerHTML = '<option value="">Select a project...</option>';
 
-    this.data.projects.forEach((project) => {
+    this.projects.forEach((project) => {
       const option = document.createElement('option');
       option.value = project.id;
       option.textContent = project.name;
-      if (project.id === this.data.activeProjectId) {
+      if (project.isActive) {
         option.selected = true;
       }
       select.appendChild(option);
@@ -111,57 +240,109 @@ class DevContextSync {
   }
 
   renderStats() {
-    const activeProject = this.getActiveProject();
-
     document.getElementById('snippetCount').textContent =
-      activeProject ? activeProject.snippets.length : 0;
+      this.activeProject?.snippetCount || 0;
     document.getElementById('knowledgeCount').textContent =
-      activeProject ? activeProject.knowledge.length : 0;
+      this.activeProject?.knowledgeCount || 0;
     document.getElementById('projectCount').textContent =
-      this.data.projects.length;
+      this.projects.length;
   }
 
   renderTierBadge() {
     const badge = document.getElementById('tierBadge');
-    const isPremium = this.data.settings.isPremium;
+    const isPremium = this.settings.isPremium;
 
     if (isPremium) {
       badge.classList.add('premium');
       badge.querySelector('.tier-label').textContent = 'Pro';
-      badge.querySelector('.tier-limits').textContent = 'Unlimited';
+      badge.querySelector('.tier-limits').textContent = 'Unlimited + Cloud Sync';
+      document.getElementById('upgradeBtn').textContent = 'Manage';
     } else {
       badge.classList.remove('premium');
       badge.querySelector('.tier-label').textContent = 'Free Tier';
       badge.querySelector('.tier-limits').textContent =
-        `${this.data.projects.length}/${FREE_TIER_LIMITS.maxProjects} projects`;
+        `${this.projects.length}/${FREE_TIER_LIMITS.maxProjects} projects`;
+      document.getElementById('upgradeBtn').textContent = 'Upgrade';
     }
   }
 
-  getActiveProject() {
-    return this.data.projects.find((p) => p.id === this.data.activeProjectId);
+  async updateStorageInfo() {
+    const stats = await this.sendMessage('GET_STORAGE_STATS');
+    const storageInfo = document.getElementById('storageInfo');
+
+    if (stats) {
+      const usedMB = (stats.used / (1024 * 1024)).toFixed(2);
+      storageInfo.querySelector('.storage-type').textContent = stats.type;
+      storageInfo.querySelector('.storage-usage').textContent =
+        `${usedMB} MB (${stats.percentage}%)`;
+    }
   }
 
-  async switchProject(projectId) {
-    this.data.activeProjectId = projectId || null;
-    await this.saveData();
-    this.render();
+  async checkCloudStatus() {
+    const status = await this.sendMessage('GET_CLOUD_STATUS');
+    const syncBtn = document.getElementById('syncStatusBtn');
+    const syncBar = document.getElementById('syncStatusBar');
+    const syncStatusText = document.getElementById('syncStatusText');
+    const lastSyncTime = document.getElementById('lastSyncTime');
+    const pendingCount = document.getElementById('pendingCount');
 
-    chrome.runtime.sendMessage({
-      type: 'PROJECT_CHANGED',
-      projectId: projectId
-    });
+    if (status.available && status.enabled) {
+      // Show sync button in header
+      syncBtn.classList.remove('hidden');
+
+      // Show sync status bar
+      syncBar.classList.remove('hidden');
+      syncBar.classList.remove('syncing', 'error', 'pending');
+
+      if (status.syncing) {
+        syncBar.classList.add('syncing');
+        syncStatusText.textContent = 'Syncing...';
+        syncBtn.title = 'Syncing...';
+      } else if (status.error) {
+        syncBar.classList.add('error');
+        syncStatusText.textContent = 'Sync error';
+        syncBtn.title = 'Sync error - click to retry';
+      } else if (status.pendingChanges > 0) {
+        syncBar.classList.add('pending');
+        syncStatusText.textContent = 'Changes pending';
+        syncBtn.classList.add('pending');
+        syncBtn.title = `${status.pendingChanges} changes pending sync`;
+        pendingCount.textContent = `${status.pendingChanges} pending`;
+        pendingCount.classList.remove('hidden');
+      } else {
+        syncStatusText.textContent = 'Cloud sync enabled';
+        syncBtn.classList.remove('pending');
+        syncBtn.title = 'Cloud sync active';
+        pendingCount.classList.add('hidden');
+      }
+
+      // Format last sync time
+      if (status.lastSyncAt) {
+        lastSyncTime.textContent = `Last synced: ${this.formatTimeAgo(new Date(status.lastSyncAt).getTime())}`;
+      } else {
+        lastSyncTime.textContent = 'Never synced';
+      }
+    } else {
+      syncBtn.classList.add('hidden');
+      syncBar.classList.add('hidden');
+    }
+  }
+
+  // ============================================
+  // Project Operations
+  // ============================================
+
+  async switchProject(projectId) {
+    if (projectId) {
+      await this.sendMessage('SET_ACTIVE_PROJECT', { projectId });
+    }
+    await this.loadData();
+    this.render();
   }
 
   canCreateProject() {
-    if (this.data.settings.isPremium) return true;
-    return this.data.projects.length < FREE_TIER_LIMITS.maxProjects;
-  }
-
-  canAddSnippet() {
-    if (this.data.settings.isPremium) return true;
-    const activeProject = this.getActiveProject();
-    if (!activeProject) return false;
-    return activeProject.snippets.length < FREE_TIER_LIMITS.maxSnippets;
+    if (this.settings.isPremium) return true;
+    return this.projects.length < FREE_TIER_LIMITS.maxProjects;
   }
 
   showNewProjectModal() {
@@ -178,11 +359,6 @@ class DevContextSync {
         <label class="form-label">Project Name</label>
         <input type="text" class="form-input" id="projectNameInput"
                placeholder="e.g., my-react-app" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Context Description</label>
-        <textarea class="form-textarea" id="projectContextInput"
-                  placeholder="Describe your project for AI context..."></textarea>
       </div>
       <div class="form-actions">
         <button class="btn btn-secondary" id="cancelProjectBtn">Cancel</button>
@@ -210,61 +386,54 @@ class DevContextSync {
 
   async createProject() {
     const name = document.getElementById('projectNameInput').value.trim();
-    const context = document.getElementById('projectContextInput').value.trim();
 
     if (!name) {
       this.showToast('Please enter a project name', 'error');
       return;
     }
 
-    const project = {
-      id: this.generateId(),
-      name,
-      context,
-      snippets: [],
-      knowledge: [],
-      createdAt: Date.now()
-    };
+    const result = await this.sendMessage('CREATE_PROJECT', { name });
 
-    this.data.projects.push(project);
-    this.data.activeProjectId = project.id;
-    await this.saveData();
-
-    this.hideModal();
-    this.render();
-    this.showToast('Project created successfully', 'success');
+    if (result.success) {
+      await this.loadData();
+      this.hideModal();
+      this.render();
+      this.showToast('Project created successfully', 'success');
+    } else {
+      this.showToast(result.error || 'Failed to create project', 'error');
+    }
   }
 
   async deleteCurrentProject() {
-    const activeProject = this.getActiveProject();
-    if (!activeProject) {
+    if (!this.activeProject) {
       this.showToast('No project selected', 'error');
       return;
     }
 
-    if (!confirm(`Delete "${activeProject.name}" and all its data?`)) {
+    if (!confirm(`Delete "${this.activeProject.name}" and all its data?`)) {
       return;
     }
 
-    this.data.projects = this.data.projects.filter(
-      (p) => p.id !== activeProject.id
-    );
-    this.data.activeProjectId = this.data.projects[0]?.id || null;
-    await this.saveData();
+    const result = await this.sendMessage('DELETE_PROJECT', {
+      projectId: this.activeProject.id
+    });
 
-    this.render();
-    this.showToast('Project deleted', 'success');
+    if (result.success) {
+      await this.loadData();
+      this.render();
+      this.showToast('Project deleted', 'success');
+    } else {
+      this.showToast(result.error || 'Failed to delete project', 'error');
+    }
   }
 
-  showSaveSnippetModal() {
-    const activeProject = this.getActiveProject();
-    if (!activeProject) {
-      this.showToast('Please select a project first', 'error');
-      return;
-    }
+  // ============================================
+  // Snippet Operations
+  // ============================================
 
-    if (!this.canAddSnippet()) {
-      this.showToast('Upgrade to Pro for unlimited snippets', 'error');
+  showSaveSnippetModal() {
+    if (!this.activeProject) {
+      this.showToast('Please select a project first', 'error');
       return;
     }
 
@@ -315,29 +484,29 @@ class DevContextSync {
       return;
     }
 
-    const activeProject = this.getActiveProject();
-    if (!activeProject) return;
-
-    const snippet = {
-      id: this.generateId(),
+    const result = await this.sendMessage('SAVE_SNIPPET', {
       code,
       language: language || 'text',
       description,
-      source: 'manual',
-      createdAt: Date.now()
-    };
+      source: 'manual'
+    });
 
-    activeProject.snippets.push(snippet);
-    await this.saveData();
-
-    this.hideModal();
-    this.render();
-    this.showToast('Snippet saved', 'success');
+    if (result.success) {
+      await this.loadData();
+      this.hideModal();
+      this.render();
+      this.showToast('Snippet saved', 'success');
+    } else {
+      this.showToast(result.error || 'Failed to save snippet', 'error');
+    }
   }
 
-  showSearchModal() {
-    const activeProject = this.getActiveProject();
-    if (!activeProject) {
+  // ============================================
+  // Search
+  // ============================================
+
+  async showSearchModal() {
+    if (!this.activeProject) {
       this.showToast('Please select a project first', 'error');
       return;
     }
@@ -367,30 +536,35 @@ class DevContextSync {
     this.performSearch('');
   }
 
-  performSearch(query) {
-    const activeProject = this.getActiveProject();
-    if (!activeProject) return;
-
+  async performSearch(query) {
     const resultsContainer = document.getElementById('searchResults');
-    const lowerQuery = query.toLowerCase();
 
-    const matchingSnippets = activeProject.snippets.filter((s) =>
-      s.code.toLowerCase().includes(lowerQuery) ||
-      s.description.toLowerCase().includes(lowerQuery) ||
-      s.language.toLowerCase().includes(lowerQuery)
-    );
+    // Use fuzzy search if query is provided, otherwise get all
+    let matchingSnippets = [];
+    let matchingKnowledge = [];
 
-    const matchingKnowledge = activeProject.knowledge.filter((k) =>
-      k.question.toLowerCase().includes(lowerQuery) ||
-      k.answer.toLowerCase().includes(lowerQuery) ||
-      k.tags.some((t) => t.toLowerCase().includes(lowerQuery))
-    );
+    if (query && query.trim()) {
+      // Use the new fuzzy search
+      const searchResult = await this.sendMessage('SEARCH_ALL', { query: query.trim() });
+      const results = searchResult.results || [];
+
+      matchingSnippets = results.filter(r => r.type === 'snippet');
+      matchingKnowledge = results.filter(r => r.type === 'knowledge');
+    } else {
+      // Get all items when no query
+      const [snippetsResult, knowledgeResult] = await Promise.all([
+        this.sendMessage('GET_SNIPPETS'),
+        this.sendMessage('GET_KNOWLEDGE')
+      ]);
+      matchingSnippets = snippetsResult.snippets || [];
+      matchingKnowledge = knowledgeResult.knowledge || [];
+    }
 
     if (matchingSnippets.length === 0 && matchingKnowledge.length === 0) {
       resultsContainer.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">&#128269;</div>
-          <div class="empty-state-text">No results found</div>
+          <div class="empty-state-text">${query ? 'No results found' : 'No items saved yet'}</div>
         </div>
       `;
       return;
@@ -399,24 +573,28 @@ class DevContextSync {
     let html = '';
 
     matchingKnowledge.forEach((k) => {
+      const scoreIndicator = k.searchScore ? `<span class="search-score" title="Relevance score">${k.searchScore}</span>` : '';
       html += `
         <div class="knowledge-item" data-id="${k.id}" data-type="knowledge">
           <div class="knowledge-question">${this.escapeHtml(k.question)}</div>
           <div class="knowledge-meta">
             <span>${new Date(k.createdAt).toLocaleDateString()}</span>
-            ${k.tags.slice(0, 2).map((t) =>
+            ${(k.tags || []).slice(0, 2).map((t) =>
               `<span class="knowledge-tag">${this.escapeHtml(t)}</span>`
             ).join('')}
+            ${scoreIndicator}
           </div>
         </div>
       `;
     });
 
     matchingSnippets.forEach((s) => {
+      const scoreIndicator = s.searchScore ? `<span class="search-score" title="Relevance score">${s.searchScore}</span>` : '';
       html += `
         <div class="snippet-item" data-id="${s.id}" data-type="snippet">
           <div class="snippet-header">
             <span class="snippet-lang">${this.escapeHtml(s.language)}</span>
+            ${scoreIndicator}
             <button class="icon-btn delete-snippet-btn" data-id="${s.id}" title="Delete">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -435,58 +613,221 @@ class DevContextSync {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const id = btn.dataset.id;
-        await this.deleteSnippet(id);
+        await this.sendMessage('DELETE_SNIPPET', { id });
+        await this.loadData();
+        this.render();
         this.performSearch(query);
+        this.showToast('Snippet deleted', 'success');
       });
     });
   }
 
-  async deleteSnippet(snippetId) {
-    const activeProject = this.getActiveProject();
-    if (!activeProject) return;
-
-    activeProject.snippets = activeProject.snippets.filter(
-      (s) => s.id !== snippetId
-    );
-    await this.saveData();
-    this.render();
-    this.showToast('Snippet deleted', 'success');
-  }
+  // ============================================
+  // Export / Import
+  // ============================================
 
   async exportToVSCode() {
-    const activeProject = this.getActiveProject();
-    if (!activeProject) {
+    if (!this.activeProject) {
       this.showToast('Please select a project first', 'error');
       return;
     }
 
+    const [snippetsResult, knowledgeResult] = await Promise.all([
+      this.sendMessage('GET_SNIPPETS'),
+      this.sendMessage('GET_KNOWLEDGE')
+    ]);
+
     const exportData = {
-      version: '1.0.0',
+      version: '2.0.0',
       exportedAt: new Date().toISOString(),
       project: {
-        id: activeProject.id,
-        name: activeProject.name,
-        context: activeProject.context
+        id: this.activeProject.id,
+        name: this.activeProject.name
       },
-      snippets: activeProject.snippets,
-      knowledge: activeProject.knowledge
+      snippets: snippetsResult.snippets || [],
+      knowledge: knowledgeResult.knowledge || []
     };
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    this.downloadJson(exportData, `devcontext-${this.activeProject.name.toLowerCase().replace(/\s+/g, '-')}.json`);
+    this.showToast('Exported successfully', 'success');
+  }
+
+  async backupAllData() {
+    const result = await this.sendMessage('EXPORT_DATA');
+
+    if (result) {
+      this.downloadJson(result, `devcontext-backup-${new Date().toISOString().split('T')[0]}.json`);
+      this.showToast('Backup created successfully', 'success');
+    } else {
+      this.showToast('Failed to create backup', 'error');
+    }
+  }
+
+  async restoreFromFile(file) {
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!data.data && !data.project) {
+        throw new Error('Invalid backup format');
+      }
+
+      const result = await this.sendMessage('IMPORT_DATA', data);
+
+      if (result.imported) {
+        await this.loadData();
+        this.render();
+        this.showToast(
+          `Restored: ${result.imported.projects || 0} projects, ${result.imported.snippets || 0} snippets`,
+          'success'
+        );
+      }
+    } catch (error) {
+      this.showToast('Failed to restore: ' + error.message, 'error');
+    }
+
+    // Reset file input
+    document.getElementById('restoreFileInput').value = '';
+  }
+
+  downloadJson(data, filename) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json'
     });
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `devcontext-${activeProject.name.toLowerCase().replace(/\s+/g, '-')}.json`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
-    this.showToast('Exported successfully', 'success');
   }
+
+  // ============================================
+  // Cloud Sync Modal (Premium)
+  // ============================================
+
+  async showCloudSyncModal() {
+    const status = await this.sendMessage('GET_CLOUD_STATUS');
+    const modalBody = document.getElementById('modalBody');
+    document.getElementById('modalTitle').textContent = 'Cloud Sync';
+
+    if (!status.available) {
+      modalBody.innerHTML = `
+        <div style="text-align: center; padding: 16px 0;">
+          <div style="font-size: 24px; margin-bottom: 12px;">&#9729;</div>
+          <div style="color: var(--text-secondary); margin-bottom: 16px;">
+            Cloud sync is a Pro feature
+          </div>
+          <button class="btn btn-primary" id="upgradeForCloudBtn">Upgrade to Pro</button>
+        </div>
+      `;
+
+      document.getElementById('upgradeForCloudBtn').addEventListener('click', () => {
+        this.hideModal();
+        this.showUpgradeModal();
+      });
+    } else if (!status.enabled || !status.user) {
+      modalBody.innerHTML = `
+        <div style="text-align: center; padding: 16px 0;">
+          <div style="font-size: 24px; margin-bottom: 12px;">&#9729;</div>
+          <div style="margin-bottom: 16px;">Sign in to enable cloud sync</div>
+          <div class="form-group">
+            <input type="email" class="form-input" id="cloudEmailInput" placeholder="Email">
+          </div>
+          <div class="form-group">
+            <input type="password" class="form-input" id="cloudPasswordInput" placeholder="Password">
+          </div>
+          <div id="cloudLoginError" style="color: var(--accent-danger); font-size: 11px; margin-bottom: 8px; display: none;"></div>
+          <button class="btn btn-primary" id="cloudLoginBtn" style="width: 100%;">Sign In</button>
+        </div>
+      `;
+
+      document.getElementById('cloudLoginBtn').addEventListener('click', async () => {
+        const email = document.getElementById('cloudEmailInput').value;
+        const password = document.getElementById('cloudPasswordInput').value;
+        const errorEl = document.getElementById('cloudLoginError');
+
+        const result = await this.sendMessage('CLOUD_LOGIN', { email, password });
+
+        if (result.success) {
+          this.hideModal();
+          this.checkCloudStatus();
+          this.showToast('Cloud sync enabled', 'success');
+        } else {
+          errorEl.textContent = result.message;
+          errorEl.style.display = 'block';
+        }
+      });
+    } else {
+      const lastSync = status.lastSyncAt
+        ? new Date(status.lastSyncAt).toLocaleString()
+        : 'Never';
+
+      modalBody.innerHTML = `
+        <div style="padding: 8px 0;">
+          <div class="form-group">
+            <label class="form-label">Account</label>
+            <div style="padding: 8px 12px; background: var(--bg-primary); border-radius: var(--radius-md); font-size: 12px;">
+              ${this.escapeHtml(status.user?.email || 'Unknown')}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <div style="padding: 8px 12px; background: var(--bg-primary); border-radius: var(--radius-md); font-size: 12px; display: flex; justify-content: space-between;">
+              <span style="color: #3fb950;">&#9679; Connected</span>
+              <span>${status.pendingChanges} pending</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Synced</label>
+            <div style="padding: 8px 12px; background: var(--bg-primary); border-radius: var(--radius-md); font-size: 12px;">
+              ${lastSync}
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top: 16px;">
+            <button class="btn btn-secondary" id="cloudLogoutBtn">Sign Out</button>
+            <button class="btn btn-primary" id="forceSyncBtn">Sync Now</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('cloudLogoutBtn').addEventListener('click', async () => {
+        await this.sendMessage('CLOUD_LOGOUT');
+        this.hideModal();
+        this.checkCloudStatus();
+        this.showToast('Signed out', 'success');
+      });
+
+      document.getElementById('forceSyncBtn').addEventListener('click', async () => {
+        try {
+          const result = await this.sendMessage('FORCE_SYNC');
+          const pushed = Number(result?.pushed) || 0;
+          const pulledCount = Object.values(result?.pulled || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+          if (result?.success) {
+            await this.loadData();
+            this.render();
+            this.checkCloudStatus();
+            this.showToast(`Synced: ${pushed} pushed, ${pulledCount} pulled`, 'success');
+          } else {
+            this.showToast(result?.error || 'Sync failed', 'error');
+          }
+        } catch (err) {
+          this.showToast(err?.message || 'Sync failed', 'error');
+        }
+      });
+    }
+
+    this.showModal();
+  }
+
+  // ============================================
+  // Upgrade Modal
+  // ============================================
 
   showUpgradeModal() {
     const modalBody = document.getElementById('modalBody');
@@ -498,9 +839,10 @@ class DevContextSync {
         <div style="font-weight: 600; margin-bottom: 8px;">DevContext Sync Pro</div>
         <div style="font-size: 20px; color: var(--accent-primary); margin-bottom: 8px;">$12/month</div>
         <div style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px;">
-          Unlimited projects and snippets<br>
-          Searchable knowledge base<br>
-          Priority support
+          &#10003; Unlimited projects and snippets<br>
+          &#10003; Cloud sync across devices<br>
+          &#10003; 50MB+ storage (IndexedDB)<br>
+          &#10003; Priority support
         </div>
         <button class="btn btn-primary" id="buyProBtn" style="width: 100%; margin-bottom: 16px;">
           Buy Pro License
@@ -527,8 +869,8 @@ class DevContextSync {
       const result = await activateLicense(key);
 
       if (result.success) {
-        this.data.settings.isPremium = true;
-        await this.saveData();
+        await this.sendMessage('UPDATE_SETTING', { key: 'isPremium', value: true });
+        await this.loadData();
         this.hideModal();
         this.render();
         this.showToast(result.message, 'success');
@@ -547,7 +889,14 @@ class DevContextSync {
     this.showModal();
   }
 
-  showSettingsModal() {
+  // ============================================
+  // Settings Modal
+  // ============================================
+
+  async showSettingsModal() {
+    const stats = await this.sendMessage('GET_STORAGE_STATS');
+    const settingsResult = await this.sendMessage('GET_SETTINGS');
+    const autoPromptEnabled = settingsResult.settings?.autoPromptEnabled !== false;
     const modalBody = document.getElementById('modalBody');
     document.getElementById('modalTitle').textContent = 'Settings';
 
@@ -555,15 +904,28 @@ class DevContextSync {
       <div class="form-group">
         <label class="form-label">Account Status</label>
         <div style="padding: 8px 12px; background: var(--bg-primary); border-radius: var(--radius-md); font-size: 12px;">
-          ${this.data.settings.isPremium ? 'Pro' : 'Free Tier'}
+          ${this.settings.isPremium ? 'Pro' : 'Free Tier'}
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Storage Used</label>
+        <label class="form-label">Auto-Prompt to Save</label>
+        <div style="padding: 8px 12px; background: var(--bg-primary); border-radius: var(--radius-md); font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-secondary);">Show save prompts after AI responses</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoPromptToggle" ${autoPromptEnabled ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Storage</label>
         <div style="padding: 8px 12px; background: var(--bg-primary); border-radius: var(--radius-md); font-size: 12px;">
-          ${this.data.projects.length} projects,
-          ${this.data.projects.reduce((sum, p) => sum + p.snippets.length, 0)} snippets,
-          ${this.data.projects.reduce((sum, p) => sum + p.knowledge.length, 0)} knowledge items
+          ${stats.type}: ${(stats.used / (1024 * 1024)).toFixed(2)} MB (${stats.percentage}%)<br>
+          <span style="color: var(--text-secondary);">
+            ${stats.counts?.projects || 0} projects,
+            ${stats.counts?.snippets || 0} snippets,
+            ${stats.counts?.knowledge || 0} knowledge items
+          </span>
         </div>
       </div>
       <div class="form-actions">
@@ -573,18 +935,143 @@ class DevContextSync {
       </div>
     `;
 
+    document.getElementById('autoPromptToggle').addEventListener('change', async (e) => {
+      await this.sendMessage('UPDATE_SETTING', { key: 'autoPromptEnabled', value: e.target.checked });
+      this.showToast(e.target.checked ? 'Auto-prompt enabled' : 'Auto-prompt disabled', 'success');
+    });
+
     document.getElementById('clearDataBtn').addEventListener('click', async () => {
       if (confirm('This will delete all projects and data. Are you sure?')) {
-        this.data = { ...DEFAULT_DATA };
-        await this.saveData();
-        this.hideModal();
-        this.render();
-        this.showToast('All data cleared', 'success');
+        // Clear via IndexedDB
+        await new Promise((resolve) => {
+          const request = indexedDB.deleteDatabase('DevContextDB');
+          request.onsuccess = resolve;
+          request.onerror = resolve;
+        });
+
+        // Reload extension
+        chrome.runtime.reload();
       }
     });
 
     this.showModal();
   }
+
+  // ============================================
+  // Activity Log Modal
+  // ============================================
+
+  async showActivityLogModal() {
+    const modalBody = document.getElementById('modalBody');
+    document.getElementById('modalTitle').textContent = 'Activity Log';
+
+    modalBody.innerHTML = `
+      <div class="activity-log-container">
+        <div class="activity-log-header">
+          <select id="activityFilter" class="select" style="width: auto; min-width: 120px;">
+            <option value="">All Activity</option>
+            <option value="save">Saves</option>
+            <option value="duplicate_detected">Duplicates</option>
+            <option value="export">Exports</option>
+          </select>
+          <button class="btn btn-secondary" id="clearActivityBtn" style="font-size: 11px;">Clear Log</button>
+        </div>
+        <div id="activityLogList" class="activity-log-list">
+          <div class="loading-state">Loading...</div>
+        </div>
+      </div>
+    `;
+
+    this.showModal();
+    await this.loadActivityLog();
+
+    document.getElementById('activityFilter').addEventListener('change', (e) => {
+      this.loadActivityLog(e.target.value);
+    });
+
+    document.getElementById('clearActivityBtn').addEventListener('click', async () => {
+      if (confirm('Clear all activity logs?')) {
+        await this.sendMessage('CLEAR_ACTIVITY_LOG');
+        this.loadActivityLog();
+        this.showToast('Activity log cleared', 'success');
+      }
+    });
+  }
+
+  async loadActivityLog(filter = '') {
+    const result = await this.sendMessage('GET_ACTIVITY_LOG', { action: filter || undefined, limit: 50 });
+    const logs = result.logs || [];
+    const container = document.getElementById('activityLogList');
+
+    if (logs.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">&#128203;</div>
+          <div class="empty-state-text">No activity yet</div>
+        </div>
+      `;
+      return;
+    }
+
+    const platformIcons = {
+      chatgpt: '&#129302;',
+      claude: '&#128640;',
+      gemini: '&#10024;',
+      github: '&#128025;',
+      stackoverflow: '&#128218;',
+      documentation: '&#128196;',
+      web: '&#127760;',
+      unknown: '&#128204;'
+    };
+
+    const actionLabels = {
+      save: { label: 'Saved', color: '#3fb950' },
+      duplicate_detected: { label: 'Duplicate', color: '#f0883e' },
+      export: { label: 'Exported', color: '#58a6ff' },
+      delete: { label: 'Deleted', color: '#f85149' }
+    };
+
+    container.innerHTML = logs.map(log => {
+      const action = actionLabels[log.action] || { label: log.action, color: '#8b949e' };
+      const platform = platformIcons[log.platform] || platformIcons.unknown;
+      const time = this.formatTimeAgo(log.timestamp);
+      const type = log.itemType === 'snippet' ? 'Code' : 'Knowledge';
+
+      return `
+        <div class="activity-log-item">
+          <span class="activity-platform" title="${log.platform || 'unknown'}">${platform}</span>
+          <div class="activity-details">
+            <div class="activity-action" style="color: ${action.color};">${action.label} ${type}</div>
+            <div class="activity-meta">${time}${log.source ? ' • ' + this.escapeHtml(this.truncateUrl(log.source)) : ''}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  formatTimeAgo(timestamp) {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+
+    return new Date(timestamp).toLocaleDateString();
+  }
+
+  truncateUrl(url) {
+    try {
+      const hostname = new URL(url).hostname;
+      return hostname.replace('www.', '');
+    } catch {
+      return url.substring(0, 30);
+    }
+  }
+
+  // ============================================
+  // Modal Helpers
+  // ============================================
 
   showModal() {
     document.getElementById('modal').classList.remove('hidden');
@@ -611,54 +1098,7 @@ class DevContextSync {
   }
 }
 
+// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   new DevContextSync();
-});
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'SAVE_SNIPPET' || message.type === 'SAVE_KNOWLEDGE') {
-    chrome.storage.local.get(['devContextData'], async (result) => {
-      const data = result.devContextData || DEFAULT_DATA;
-      const activeProject = data.projects.find(
-        (p) => p.id === data.activeProjectId
-      );
-
-      if (!activeProject) {
-        sendResponse({ success: false, error: 'No active project' });
-        return;
-      }
-
-      if (message.type === 'SAVE_SNIPPET') {
-        if (!data.settings.isPremium &&
-            activeProject.snippets.length >= FREE_TIER_LIMITS.maxSnippets) {
-          sendResponse({ success: false, error: 'Snippet limit reached' });
-          return;
-        }
-
-        activeProject.snippets.push({
-          id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-          code: message.data.code,
-          language: message.data.language || 'text',
-          description: message.data.description || '',
-          source: message.data.source || 'chatgpt',
-          createdAt: Date.now()
-        });
-      } else if (message.type === 'SAVE_KNOWLEDGE') {
-        activeProject.knowledge.push({
-          id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-          question: message.data.question,
-          answer: message.data.answer,
-          source: message.data.source || 'chatgpt',
-          tags: message.data.tags || [],
-          createdAt: Date.now()
-        });
-      }
-
-      chrome.storage.local.set({ devContextData: data }, () => {
-        sendResponse({ success: true });
-      });
-    });
-
-    return true;
-  }
 });

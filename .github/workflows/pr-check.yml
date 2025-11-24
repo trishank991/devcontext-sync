@@ -1,0 +1,51 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run build
+
+  extension:
+    name: Extension Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate manifest.json
+        run: |
+          if [ -f manifest.json ]; then
+            python3 -c "import json; json.load(open('manifest.json'))"
+            echo "manifest.json is valid JSON"
+          fi
+
+      - name: Check JavaScript syntax
+        run: |
+          for file in *.js; do
+            if [ -f "$file" ]; then
+              node --check "$file" && echo "$file: OK"
+            fi
+          done

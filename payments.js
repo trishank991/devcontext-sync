@@ -9,14 +9,13 @@
 // 2. Set up a license validation API endpoint
 // 3. Update the values below
 const CONFIG = {
-  // Payment links - REPLACE with your actual Stripe payment links before release
+  // Payment links - Configure in Stripe Dashboard
   paymentLinks: {
     pro: 'https://buy.stripe.com/test_pro',    // TODO: Replace with actual Pro payment link
     team: 'https://buy.stripe.com/test_team'   // TODO: Replace with actual Team payment link
   },
-  // License validation API - REPLACE with your backend URL
-  // Set to null to use offline-only validation (less secure)
-  licenseApiUrl: null  // TODO: Set to your API URL, e.g., 'https://api.yoursite.com/v1/license'
+  // License validation API
+  licenseApiUrl: 'https://devcontext-sync-api.fly.dev/api/v1/license'
 };
 
 const LICENSE_PATTERN = /^DCS-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;

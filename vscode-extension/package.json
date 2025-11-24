@@ -1,53 +1,135 @@
 {
   "name": "devcontext-sync",
   "displayName": "DevContext Sync",
-  "description": "Sync AI context between browser and IDE - receive context from Chrome extension",
+  "description": "Access your AI coding context from ChatGPT, Claude & more directly in VS Code",
   "version": "0.1.0",
   "publisher": "devcontext",
+  "icon": "images/icon.png",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.85.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Snippets"
   ],
   "keywords": [
     "ai",
+    "chatgpt",
+    "claude",
+    "gemini",
     "context",
-    "cursor",
-    "continue",
-    "sync"
+    "snippets",
+    "knowledge",
+    "cursor"
   ],
   "activationEvents": [
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "devcontext",
+          "title": "DevContext Sync",
+          "icon": "images/sidebar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "devcontext": [
+        {
+          "id": "devcontext.projects",
+          "name": "Projects"
+        },
+        {
+          "id": "devcontext.snippets",
+          "name": "Code Snippets"
+        },
+        {
+          "id": "devcontext.knowledge",
+          "name": "Knowledge Base"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "devcontext-sync.importContext",
-        "title": "DevContext: Import Context"
+        "command": "devcontext.refresh",
+        "title": "DevContext: Refresh",
+        "icon": "$(refresh)"
       },
       {
-        "command": "devcontext-sync.showContext",
-        "title": "DevContext: Show Context"
+        "command": "devcontext.importFromFile",
+        "title": "DevContext: Import from File"
       },
       {
-        "command": "devcontext-sync.clearContext",
-        "title": "DevContext: Clear Context"
+        "command": "devcontext.search",
+        "title": "DevContext: Search",
+        "icon": "$(search)"
+      },
+      {
+        "command": "devcontext.copySnippet",
+        "title": "Copy to Clipboard",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "devcontext.insertSnippet",
+        "title": "Insert at Cursor",
+        "icon": "$(insert)"
+      },
+      {
+        "command": "devcontext.openSnippetPreview",
+        "title": "Preview Snippet",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "devcontext.switchProject",
+        "title": "DevContext: Switch Project"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "devcontext.refresh",
+          "when": "view =~ /devcontext\\./",
+          "group": "navigation"
+        },
+        {
+          "command": "devcontext.search",
+          "when": "view == devcontext.knowledge || view == devcontext.snippets",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "devcontext.copySnippet",
+          "when": "viewItem == snippet",
+          "group": "inline"
+        },
+        {
+          "command": "devcontext.insertSnippet",
+          "when": "viewItem == snippet",
+          "group": "inline"
+        }
+      ]
+    },
     "configuration": {
       "title": "DevContext Sync",
       "properties": {
-        "devcontextSync.contextFilePath": {
+        "devcontext.dataPath": {
           "type": "string",
           "default": "",
-          "description": "Path to the context JSON file exported from Chrome extension"
+          "description": "Path to DevContext data file (exported from browser extension)"
         },
-        "devcontextSync.autoImport": {
+        "devcontext.autoRefresh": {
           "type": "boolean",
-          "default": false,
-          "description": "Automatically import context when file changes"
+          "default": true,
+          "description": "Automatically refresh when data file changes"
+        },
+        "devcontext.showSourceLinks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show source links (ChatGPT, Claude, etc.) in snippets"
         }
       }
     }
@@ -56,15 +138,18 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts"
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
   },
   "devDependencies": {
-    "@types/node": "^18.0.0",
-    "@types/vscode": "^1.74.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.0.0",
-    "typescript": "^5.0.0"
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
   },
   "repository": {
     "type": "git",

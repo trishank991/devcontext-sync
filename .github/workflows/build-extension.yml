@@ -1,0 +1,45 @@
+name: Build Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    name: Build Chrome Extension
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version in manifest
+        run: |
+          sed -i 's/"version": "[^"]*"/"version": "${{ github.event.inputs.version }}"/' manifest.json
+
+      - name: Create extension package
+        run: |
+          mkdir -p dist
+          zip -r dist/devcontext-sync-${{ github.event.inputs.version }}.zip \
+            manifest.json \
+            *.js \
+            *.html \
+            *.css \
+            *.json \
+            icons/ \
+            -x "*.git*" \
+            -x "node_modules/*" \
+            -x "backend/*" \
+            -x "vscode-extension/*" \
+            -x "dist/*" \
+            -x "CREDENTIALS.md"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension-${{ github.event.inputs.version }}
+          path: dist/devcontext-sync-${{ github.event.inputs.version }}.zip
+          retention-days: 30

@@ -193,6 +193,26 @@
             border-color: var(--text-muted);
         }
 
+        .hero-trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .trust-badge-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+        }
+
+        .trust-badge-item svg {
+            color: var(--success);
+        }
+
         .hero-stats {
             display: flex;
             justify-content: center;
@@ -323,6 +343,107 @@
             flex-shrink: 0;
         }
 
+        /* Why DevContext / Competitive Positioning */
+        .why-section {
+            padding: 100px 0;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        }
+
+        .why-section .section-title em {
+            color: var(--accent);
+            font-style: normal;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .comparison-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+        }
+
+        .comparison-card.positive {
+            border-color: var(--success);
+            background: linear-gradient(135deg, rgba(63, 185, 80, 0.05) 0%, var(--bg-primary) 100%);
+        }
+
+        .comparison-card.negative {
+            border-color: #f85149;
+            background: linear-gradient(135deg, rgba(248, 81, 73, 0.03) 0%, var(--bg-primary) 100%);
+        }
+
+        .comparison-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .comparison-header h3 {
+            font-size: 1.125rem;
+            color: var(--text-primary);
+        }
+
+        .comparison-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .comparison-icon.positive {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--success);
+        }
+
+        .comparison-icon.negative {
+            background: rgba(248, 81, 73, 0.15);
+            color: #f85149;
+        }
+
+        .comparison-list {
+            list-style: none;
+        }
+
+        .comparison-list li {
+            padding: 8px 0;
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .comparison-card.positive .comparison-list li::before {
+            content: "+";
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .comparison-card.negative .comparison-list li::before {
+            content: "—";
+            color: #f85149;
+        }
+
+        .comparison-tagline {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
         /* Features Section */
         .features {
             padding: 100px 0;
@@ -368,6 +489,21 @@
         .feature-card p {
             color: var(--text-secondary);
             font-size: 0.9375rem;
+        }
+
+        .feature-card.featured-card {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.05) 0%, var(--bg-primary) 100%);
+        }
+
+        .feature-benefit {
+            display: block;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--accent);
         }
 
         /* How It Works */
@@ -549,6 +685,92 @@
             line-height: 1.7;
         }
 
+        /* Trust Section */
+        .trust-section {
+            padding: 100px 0;
+            background: var(--bg-secondary);
+        }
+
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .trust-item {
+            text-align: center;
+            padding: 32px 24px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .trust-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: var(--accent);
+        }
+
+        .trust-item h3 {
+            font-size: 1.125rem;
+            margin-bottom: 12px;
+        }
+
+        .trust-item p {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        /* Not Section */
+        .not-section {
+            padding: 80px 0;
+            background: var(--bg-primary);
+        }
+
+        .not-grid {
+            max-width: 700px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .not-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        .not-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: rgba(248, 81, 73, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #f85149;
+        }
+
+        .not-item strong {
+            color: var(--text-primary);
+        }
+
         /* CTA Section */
         .cta {
             padding: 100px 0;
@@ -633,6 +855,208 @@
             color: var(--text-muted);
         }
 
+        /* Hero Visual */
+        .hero-visual {
+            margin-top: 64px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .split-screen {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 0;
+            align-items: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .screen-panel {
+            padding: 24px;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen-panel.chatgpt {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-right: 1px solid var(--border);
+        }
+
+        .screen-panel.vscode {
+            background: linear-gradient(135deg, #1e1e2e 0%, #252526 100%);
+        }
+
+        .screen-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .screen-logo {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .screen-logo.gpt {
+            background: #10a37f;
+        }
+
+        .screen-logo.vs {
+            background: #007acc;
+        }
+
+        .screen-title {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .chat-bubble {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .chat-bubble.assistant {
+            border-left: 3px solid #10a37f;
+        }
+
+        .chat-bubble code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.75rem;
+            color: #a5d6ff;
+        }
+
+        .save-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(63, 185, 80, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            margin-top: auto;
+            width: fit-content;
+        }
+
+        .save-badge svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .sync-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            background: var(--bg-primary);
+        }
+
+        .sync-arrow-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        .sync-arrow-icon svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .sync-label {
+            font-size: 0.625rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+
+        .vscode-file {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .vscode-file-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.2);
+            font-size: 0.6875rem;
+            color: var(--text-secondary);
+        }
+
+        .vscode-file-header svg {
+            width: 12px;
+            height: 12px;
+            color: #e8ab53;
+        }
+
+        .vscode-content {
+            padding: 12px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.6875rem;
+            line-height: 1.6;
+            color: #d4d4d4;
+        }
+
+        .vscode-content .keyword { color: #569cd6; }
+        .vscode-content .string { color: #ce9178; }
+        .vscode-content .comment { color: #6a9955; }
+        .vscode-content .function { color: #dcdcaa; }
+
+        .context-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(88, 166, 255, 0.15);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            margin-top: auto;
+            width: fit-content;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .nav-links {
@@ -646,6 +1070,34 @@
             .hero-stats {
                 flex-direction: column;
                 gap: 24px;
+            }
+
+            .split-screen {
+                grid-template-columns: 1fr;
+            }
+
+            .sync-arrow {
+                padding: 16px;
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .sync-arrow-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .sync-arrow-icon svg {
+                transform: rotate(90deg);
+            }
+
+            .screen-panel {
+                min-height: auto;
+            }
+
+            .screen-panel.chatgpt {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
             }
 
             .problem-grid {
@@ -675,6 +1127,26 @@
                 flex-direction: column;
                 gap: 16px;
                 text-align: center;
+            }
+
+            .trust-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-trust-badges {
+                flex-direction: column;
+                gap: 12px;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .trust-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -732,19 +1204,105 @@
         <div class="container">
             <span class="hero-badge">Chrome Extension + VS Code</span>
             <h1>Your AI coding memory, everywhere</h1>
-            <p class="hero-subtitle">Stop re-explaining your codebase to AI. DevContext Sync keeps your AI conversations, code snippets, and project context synchronized between browser and IDE.</p>
+            <p class="hero-subtitle">Save project context from ChatGPT & Claude automatically — access it instantly in VS Code.</p>
             <div class="hero-cta">
                 <a href="#" class="btn btn-primary">Install Free Extension</a>
                 <a href="#how-it-works" class="btn btn-secondary">See How It Works</a>
             </div>
+
+            <!-- Trust badges -->
+            <div class="hero-trust-badges">
+                <div class="trust-badge-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Local-First Storage</span>
+                </div>
+                <div class="trust-badge-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Zero Data Collection</span>
+                </div>
+                <div class="trust-badge-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Open Source Extension</span>
+                </div>
+            </div>
+
+            <!-- Hero Visual: Split-screen mockup -->
+            <div class="hero-visual">
+                <div class="split-screen">
+                    <!-- ChatGPT Panel -->
+                    <div class="screen-panel chatgpt">
+                        <div class="screen-header">
+                            <div class="screen-logo gpt">G</div>
+                            <span class="screen-title">ChatGPT</span>
+                        </div>
+                        <div class="chat-bubble assistant">
+                            Here's a React hook for debouncing:<br><br>
+                            <code>const useDebounce = (value, delay) =&gt; {...}</code><br><br>
+                            This prevents excessive API calls by waiting until the user stops typing.
+                        </div>
+                        <div class="save-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Saved to DevContext
+                        </div>
+                    </div>
+
+                    <!-- Sync Arrow -->
+                    <div class="sync-arrow">
+                        <div class="sync-arrow-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                        <span class="sync-label">Synced</span>
+                    </div>
+
+                    <!-- VS Code Panel -->
+                    <div class="screen-panel vscode">
+                        <div class="screen-header">
+                            <div class="screen-logo vs">VS</div>
+                            <span class="screen-title">VS Code</span>
+                        </div>
+                        <div class="vscode-file">
+                            <div class="vscode-file-header">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M13 9h5.5L13 3.5V9M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m5 15v-2H6v2h5m5-4H6v2h10v-2z"/>
+                                </svg>
+                                .devcontext/snippets.json
+                            </div>
+                            <div class="vscode-content">
+                                <span class="comment">// From ChatGPT - React hooks</span><br>
+                                <span class="keyword">export const</span> <span class="function">useDebounce</span> = (<br>
+                                &nbsp;&nbsp;value, delay<br>
+                                ) =&gt; { ... }
+                            </div>
+                        </div>
+                        <div class="context-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            my-react-app context loaded
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="hero-stats">
                 <div class="stat">
-                    <div class="stat-value">5+ hrs</div>
-                    <div class="stat-label">saved per week</div>
+                    <div class="stat-value">Free</div>
+                    <div class="stat-label">no signup needed</div>
                 </div>
                 <div class="stat">
                     <div class="stat-value">100%</div>
-                    <div class="stat-label">context retention</div>
+                    <div class="stat-label">local & private</div>
                 </div>
                 <div class="stat">
                     <div class="stat-value">2 min</div>
@@ -764,7 +1322,7 @@
             <div class="problem-grid">
                 <div class="problem-content">
                     <h3>Sound familiar?</h3>
-                    <p>You spent 20 minutes explaining your project architecture to ChatGPT. Now you need to use Claude, or switch to VS Code Copilot. Back to square one.</p>
+                    <p>"I just spent 15 minutes explaining our microservices architecture to ChatGPT. Now I need to switch to Claude for better code review... and I have to explain it all over again."</p>
                     <div class="problem-stat">
                         <span class="problem-stat-value">5+</span>
                         <span class="problem-stat-text">hours per week lost to re-explaining context to AI tools</span>
@@ -775,7 +1333,7 @@
                     <ul class="solution-list">
                         <li>
                             <span class="check-icon">+</span>
-                            <span>Save context once, use it everywhere</span>
+                            <span>Save context once, use it across ChatGPT and Claude</span>
                         </li>
                         <li>
                             <span class="check-icon">+</span>
@@ -783,15 +1341,57 @@
                         </li>
                         <li>
                             <span class="check-icon">+</span>
-                            <span>AI conversations become searchable knowledge</span>
+                            <span>Smart memory detects duplicates & shows activity logs</span>
                         </li>
                         <li>
                             <span class="check-icon">+</span>
-                            <span>Code snippets sync instantly to your IDE</span>
+                            <span>Code snippets sync instantly to VS Code & Cursor</span>
                         </li>
                     </ul>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Why DevContext - Competitive Positioning -->
+    <section class="why-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">Why DevContext?</p>
+                <h2 class="section-title">ChatGPT remembers. Claude remembers.<br>But they don't remember <em>each other</em>.</h2>
+                <p class="section-subtitle">Native AI memory is siloed. We bridge the gap.</p>
+            </div>
+            <div class="comparison-grid">
+                <div class="comparison-card negative">
+                    <div class="comparison-header">
+                        <span class="comparison-icon negative">X</span>
+                        <h3>Native AI Memory</h3>
+                    </div>
+                    <ul class="comparison-list">
+                        <li>Context stays locked in one platform</li>
+                        <li>Can't sync to your IDE</li>
+                        <li>No project-based organization</li>
+                        <li>No duplicate detection</li>
+                        <li>No searchable knowledge base</li>
+                        <li>No team sharing capabilities</li>
+                    </ul>
+                </div>
+                <div class="comparison-card positive">
+                    <div class="comparison-header">
+                        <span class="comparison-icon positive">+</span>
+                        <h3>DevContext Sync</h3>
+                    </div>
+                    <ul class="comparison-list">
+                        <li>Context flows across ChatGPT, Claude & more</li>
+                        <li>Instant sync to VS Code & Cursor</li>
+                        <li>Project-based context isolation</li>
+                        <li>Smart duplicate detection with logs</li>
+                        <li>Full-text searchable knowledge base</li>
+                        <li>Team sharing & collaboration (Pro)</li>
+                    </ul>
+                </div>
+            </div>
+            <p class="comparison-tagline">The unified memory layer for developers who use multiple AI tools.</p>
         </div>
     </section>
 
@@ -803,6 +1403,29 @@
                 <p class="section-subtitle">Built by developers, for developers. No bloat, no complexity.</p>
             </div>
             <div class="features-grid">
+                <div class="feature-card featured-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Cross-AI Context Sync</h3>
+                    <p>Use ChatGPT in the morning, Claude in the afternoon — your project context follows you. No more re-explaining your codebase every time you switch tools.</p>
+                    <span class="feature-benefit">Never re-explain your project architecture again</span>
+                </div>
+                <div class="feature-card featured-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                    <h3>Smart Memory & Duplicate Detection</h3>
+                    <p>Our intelligent system remembers everything you save. Try to save the same snippet twice? We'll remind you when and where you saved it before — with source links and activity logs.</p>
+                    <span class="feature-benefit">Never save duplicate content without knowing</span>
+                </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -811,6 +1434,18 @@
                     </div>
                     <h3>Project-Based Context Isolation</h3>
                     <p>Keep contexts separate per project. Your React frontend context never bleeds into your Python backend work. Switch projects, get the right context instantly.</p>
+                    <span class="feature-benefit">Work on multiple projects without confusion</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Browser to IDE Sync</h3>
+                    <p>Save code from AI conversations with one click. Snippets sync to VS Code and Cursor instantly. No more copy-pasting between browser and editor.</p>
+                    <span class="feature-benefit">Code snippets ready in your editor in seconds</span>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -821,16 +1456,7 @@
                     </div>
                     <h3>Searchable Knowledge Base</h3>
                     <p>Every AI conversation becomes searchable documentation. Find that solution you got three months ago in seconds. Full-text search across all your saved contexts.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="16 18 22 12 16 6"></polyline>
-                            <polyline points="8 6 2 12 8 18"></polyline>
-                        </svg>
-                    </div>
-                    <h3>Code Snippet Library</h3>
-                    <p>Save code from AI conversations with one click. Snippets sync to VS Code and Cursor instantly. Tag, organize, and reuse across projects.</p>
+                    <span class="feature-benefit">Build a personal AI-powered knowledge library</span>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -843,6 +1469,7 @@
                     </div>
                     <h3>Team Sharing (Pro)</h3>
                     <p>Share project contexts with your team. Build a collective knowledge base. Onboard new developers faster with pre-built AI context for your codebase.</p>
+                    <span class="feature-benefit">Accelerate team onboarding with shared context</span>
                 </div>
             </div>
         </div>
@@ -891,11 +1518,11 @@
                         <span class="price-period">/month</span>
                     </div>
                     <ul class="pricing-features">
-                        <li><span class="check">+</span> 2 project contexts</li>
+                        <li><span class="check">+</span> No account required</li>
+                        <li><span class="check">+</span> 3 project contexts</li>
                         <li><span class="check">+</span> 50 saved snippets</li>
                         <li><span class="check">+</span> Browser to IDE sync</li>
                         <li><span class="check">+</span> Basic search</li>
-                        <li><span class="check">+</span> Community support</li>
                     </ul>
                     <a href="#" class="btn btn-secondary">Get Started Free</a>
                 </div>
@@ -909,7 +1536,7 @@
                     <ul class="pricing-features">
                         <li><span class="check">+</span> Unlimited projects</li>
                         <li><span class="check">+</span> Unlimited snippets</li>
-                        <li><span class="check">+</span> Full searchable history</li>
+                        <li><span class="check">+</span> Cloud sync across devices</li>
                         <li><span class="check">+</span> Export to Markdown/JSON</li>
                         <li><span class="check">+</span> Priority support</li>
                     </ul>
@@ -970,10 +1597,85 @@
         </div>
     </section>
 
+    <section class="trust-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">Privacy & Security</p>
+                <h2 class="section-title">Your data stays yours</h2>
+            </div>
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <div class="trust-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <h3>Local-First Storage</h3>
+                    <p>Free users: 100% local, no account needed. Premium users: optional cloud sync across devices with a simple account.</p>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                    </div>
+                    <h3>You Control What's Saved</h3>
+                    <p>No automatic scraping. You explicitly choose what to save with a single click. Only the content you select ever gets stored.</p>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <h3>No AI Training</h3>
+                    <p>We never use your code or conversations to train AI models. Your intellectual property stays private. Period.</p>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <h3>Full Data Export</h3>
+                    <p>Export or delete all your data anytime. No lock-in, no dark patterns. Your knowledge base belongs to you.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="not-section">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">Clarity</p>
+                <h2 class="section-title">What DevContext Sync is NOT</h2>
+                <p class="section-subtitle">So you know exactly what you're getting</p>
+            </div>
+            <div class="not-grid">
+                <div class="not-item">
+                    <span class="not-icon">X</span>
+                    <span><strong>Not an AI chatbot</strong> — We don't replace ChatGPT or Claude. We help you use them better.</span>
+                </div>
+                <div class="not-item">
+                    <span class="not-icon">X</span>
+                    <span><strong>Not a code generator</strong> — We save and sync the code your AI gives you, not generate it ourselves.</span>
+                </div>
+                <div class="not-item">
+                    <span class="not-icon">X</span>
+                    <span><strong>Not a bookmark manager</strong> — We save actual content, make it searchable, and sync it to your IDE.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="cta">
         <div class="container">
             <h2>Stop losing context. Start shipping faster.</h2>
-            <p>Join thousands of developers who've reclaimed their productivity.</p>
+            <p>Join developers who've reclaimed their productivity.</p>
             <div class="hero-cta">
                 <a href="#" class="btn btn-primary">Install Free Extension</a>
             </div>

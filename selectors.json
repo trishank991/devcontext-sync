@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-24",
+  "platforms": {
+    "chatgpt": {
+      "hostnames": ["chatgpt.com", "chat.openai.com"],
+      "responseSelectors": [
+        "[data-message-author-role=\"assistant\"] .markdown",
+        "[data-message-author-role=\"assistant\"] .prose",
+        "[data-message-author-role=\"assistant\"] [class*=\"markdown\"]",
+        ".agent-turn .markdown",
+        ".agent-turn .prose",
+        "[class*=\"ConversationItem\"] [class*=\"prose\"]",
+        "article[data-testid*=\"conversation\"] .prose"
+      ],
+      "userMessageSelector": "[data-message-author-role=\"user\"]",
+      "streamingIndicators": [
+        "[data-testid=\"stop-button\"]",
+        ".result-streaming",
+        "[class*=\"cursor\"]"
+      ],
+      "codeBlockSelector": "pre code"
+    },
+    "claude": {
+      "hostnames": ["claude.ai"],
+      "responseSelectors": [
+        "[class*=\"assistant-message\"]",
+        "[class*=\"claude-message\"]",
+        "[class*=\"prose\"]",
+        "[data-is-streaming]",
+        ".font-claude-message",
+        "[class*=\"Message\"] [class*=\"prose\"]",
+        "[class*=\"response-content\"]"
+      ],
+      "userMessageSelector": "[class*=\"human\"]",
+      "streamingIndicators": [
+        "[data-is-streaming=\"true\"]"
+      ],
+      "codeBlockSelector": "pre code"
+    },
+    "gemini": {
+      "hostnames": ["gemini.google.com"],
+      "responseSelectors": [
+        "[class*=\"model-response\"]",
+        "[class*=\"response-content\"]",
+        "[class*=\"message-content\"][data-message-author=\"model\"]",
+        ".response-container .markdown",
+        "[class*=\"conversation-turn\"] [class*=\"model\"]",
+        ".model-response-text",
+        "[data-message-author=\"1\"]"
+      ],
+      "userMessageSelector": "[class*=\"query\"], [class*=\"user-message\"], [data-message-author=\"0\"]",
+      "streamingIndicators": [
+        "[class*=\"loading\"]",
+        "[class*=\"streaming\"]",
+        "[class*=\"stop-button\"]",
+        "[aria-label*=\"Stop\"]"
+      ],
+      "codeBlockSelector": "pre code"
+    },
+    "perplexity": {
+      "hostnames": ["perplexity.ai", "www.perplexity.ai"],
+      "responseSelectors": [
+        "[class*=\"answer-content\"]",
+        "[class*=\"prose\"]",
+        "[class*=\"response-text\"]",
+        ".answer-body",
+        "[class*=\"AnswerContent\"]",
+        "[class*=\"markdown-content\"]",
+        "[data-testid=\"answer-content\"]"
+      ],
+      "userMessageSelector": "[class*=\"query-text\"], [class*=\"question\"]",
+      "streamingIndicators": [
+        "[class*=\"typing\"]",
+        "[class*=\"loading\"]",
+        "[class*=\"generating\"]"
+      ],
+      "codeBlockSelector": "pre code"
+    }
+  },
+  "universal": {
+    "codeBlocks": "pre code, pre > code, [class*=\"code-block\"], [class*=\"hljs\"]",
+    "markdown": "[class*=\"prose\"], [class*=\"markdown\"], [class*=\"content\"]",
+    "aiResponse": "[data-role=\"assistant\"], [data-author=\"assistant\"], [role=\"article\"]"
+  }
+}
