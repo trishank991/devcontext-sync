@@ -85,6 +85,49 @@
       {
         "command": "devcontext.switchProject",
         "title": "DevContext: Switch Project"
+      },
+      {
+        "command": "devcontext.injectContext",
+        "title": "DevContext: Inject Relevant Context",
+        "icon": "$(arrow-circle-down)"
+      },
+      {
+        "command": "devcontext.addContextToClipboard",
+        "title": "DevContext: Add Context to Clipboard",
+        "icon": "$(clippy)"
+      },
+      {
+        "command": "devcontext.showRelevantContext",
+        "title": "DevContext: Show Relevant Context",
+        "icon": "$(lightbulb)"
+      },
+      {
+        "command": "devcontext.injectToCopilot",
+        "title": "DevContext: Inject to Copilot Instructions"
+      },
+      {
+        "command": "devcontext.injectToCursor",
+        "title": "DevContext: Inject to .cursorrules"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "devcontext.injectContext",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devcontext.addContextToClipboard",
+        "key": "ctrl+alt+d",
+        "mac": "cmd+alt+d",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devcontext.showRelevantContext",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "editorTextFocus"
       }
     ],
     "menus": {
@@ -111,6 +154,18 @@
           "when": "viewItem == snippet",
           "group": "inline"
         }
+      ],
+      "editor/context": [
+        {
+          "command": "devcontext.injectContext",
+          "group": "devcontext@1",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "devcontext.showRelevantContext",
+          "group": "devcontext@2",
+          "when": "editorTextFocus"
+        }
       ]
     },
     "configuration": {
@@ -130,6 +185,36 @@
           "type": "boolean",
           "default": true,
           "description": "Show source links (ChatGPT, Claude, etc.) in snippets"
+        },
+        "devcontext.contextInjection.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic context detection and injection features"
+        },
+        "devcontext.contextInjection.maxItems": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Maximum number of context items to inject"
+        },
+        "devcontext.contextInjection.minRelevanceScore": {
+          "type": "number",
+          "default": 15,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Minimum relevance score for context items (0-100)"
+        },
+        "devcontext.contextInjection.format": {
+          "type": "string",
+          "enum": ["markdown", "plain", "xml"],
+          "default": "markdown",
+          "description": "Output format for injected context"
+        },
+        "devcontext.contextInjection.includeMetadata": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include source and date metadata in injected context"
         }
       }
     }

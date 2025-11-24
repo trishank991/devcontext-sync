@@ -1,5 +1,14 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { ContextDetector } from './context/ContextDetector';
+import { ContextMatcher, MatchResult, Snippet as MatcherSnippet, Knowledge as MatcherKnowledge } from './context/ContextMatcher';
+import { ContextInjector } from './context/ContextInjector';
+
+// Context injection components
+let contextDetector: ContextDetector;
+let contextMatcher: ContextMatcher;
+let contextInjector: ContextInjector;
+let relevantContextStatusBar: vscode.StatusBarItem;
 
 // Data interfaces matching Chrome extension export format
 interface Project {
@@ -71,6 +80,11 @@ export function activate(context: vscode.ExtensionContext) {
     contextData = context.globalState.get<DevContextData>('devContextData') || null;
     activeProjectId = context.globalState.get<string>('activeProjectId') || null;
 
+    // Initialize context injection components
+    contextDetector = new ContextDetector();
+    contextMatcher = new ContextMatcher();
+    contextInjector = new ContextInjector();
+
     // Create tree data providers
     projectsProvider = new ProjectsTreeDataProvider();
     snippetsProvider = new SnippetsTreeDataProvider();
@@ -81,15 +95,26 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider('devcontext.snippets', snippetsProvider);
     vscode.window.registerTreeDataProvider('devcontext.knowledge', knowledgeProvider);
 
-    // Create status bar item
+    // Create status bar item for project
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.command = 'devcontext.switchProject';
     updateStatusBar();
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
 
+    // Create status bar item for relevant context
+    relevantContextStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
+    relevantContextStatusBar.command = 'devcontext.showRelevantContext';
+    relevantContextStatusBar.text = '$(lightbulb) Context';
+    relevantContextStatusBar.tooltip = 'Click to find relevant DevContext';
+    relevantContextStatusBar.show();
+    context.subscriptions.push(relevantContextStatusBar);
+
     // Setup file watcher for auto-refresh
     setupFileWatcher(context);
+
+    // Setup context detection on editor changes
+    setupContextDetection(context);
 
     // Register commands
     context.subscriptions.push(
@@ -100,7 +125,13 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('devcontext.insertSnippet', (item: SnippetItem) => insertSnippet(item)),
         vscode.commands.registerCommand('devcontext.openSnippetPreview', (item: SnippetItem) => previewSnippet(item)),
         vscode.commands.registerCommand('devcontext.switchProject', () => switchProject(context)),
-        vscode.commands.registerCommand('devcontext.selectProject', (projectId: string) => selectProject(context, projectId))
+        vscode.commands.registerCommand('devcontext.selectProject', (projectId: string) => selectProject(context, projectId)),
+        // New context injection commands
+        vscode.commands.registerCommand('devcontext.injectContext', () => injectRelevantContext()),
+        vscode.commands.registerCommand('devcontext.addContextToClipboard', () => addContextToClipboard()),
+        vscode.commands.registerCommand('devcontext.showRelevantContext', () => showRelevantContextPanel()),
+        vscode.commands.registerCommand('devcontext.injectToCopilot', () => injectToCopilot()),
+        vscode.commands.registerCommand('devcontext.injectToCursor', () => injectToCursor())
     );
 
     refresh();
@@ -520,6 +551,239 @@ function getSnippetPreviewHtml(snippet: Snippet): string {
     <pre><code>${escapeHtml(snippet.code)}</code></pre>
 </body>
 </html>`;
+}
+
+// Context detection and injection functions
+let contextDetectionDebounce: NodeJS.Timeout | null = null;
+let lastMatchCount = 0;
+
+function setupContextDetection(context: vscode.ExtensionContext) {
+    // Detect context on editor change
+    context.subscriptions.push(
+        vscode.window.onDidChangeActiveTextEditor(editor => {
+            if (editor) {
+                debounceContextDetection(editor);
+            }
+        })
+    );
+
+    // Detect context on diagnostics change (errors)
+    context.subscriptions.push(
+        vscode.languages.onDidChangeDiagnostics(event => {
+            const editor = vscode.window.activeTextEditor;
+            if (editor && event.uris.some(uri => uri.toString() === editor.document.uri.toString())) {
+                debounceContextDetection(editor);
+            }
+        })
+    );
+
+    // Initial detection
+    if (vscode.window.activeTextEditor) {
+        debounceContextDetection(vscode.window.activeTextEditor);
+    }
+}
+
+function debounceContextDetection(editor: vscode.TextEditor) {
+    if (contextDetectionDebounce) {
+        clearTimeout(contextDetectionDebounce);
+    }
+    contextDetectionDebounce = setTimeout(async () => {
+        await updateRelevantContextStatus(editor);
+    }, 500);
+}
+
+async function updateRelevantContextStatus(editor: vscode.TextEditor) {
+    if (!contextData?.data) {
+        relevantContextStatusBar.text = '$(lightbulb) No Data';
+        relevantContextStatusBar.tooltip = 'Import DevContext data first';
+        return;
+    }
+
+    try {
+        const editorContext = await contextDetector.detectContext(editor);
+        const snippets = getActiveSnippets().map(s => s as MatcherSnippet);
+        const knowledge = getActiveKnowledge().map(k => k as MatcherKnowledge);
+
+        const matches = await contextMatcher.findRelevantContext(
+            editorContext,
+            snippets,
+            knowledge,
+            { maxResults: 10, minScore: 15 }
+        );
+
+        lastMatchCount = matches.length;
+
+        if (matches.length > 0) {
+            relevantContextStatusBar.text = `$(lightbulb) ${matches.length} relevant`;
+            relevantContextStatusBar.tooltip = `Found ${matches.length} relevant items. Click to view/inject.`;
+            relevantContextStatusBar.backgroundColor = undefined;
+        } else {
+            relevantContextStatusBar.text = '$(lightbulb) Context';
+            relevantContextStatusBar.tooltip = 'No relevant context found for current file';
+        }
+    } catch (error) {
+        console.error('Context detection error:', error);
+    }
+}
+
+async function findRelevantMatches(): Promise<MatchResult[]> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || !contextData?.data) {
+        return [];
+    }
+
+    const editorContext = await contextDetector.detectContext(editor);
+    const snippets = getActiveSnippets().map(s => s as MatcherSnippet);
+    const knowledge = getActiveKnowledge().map(k => k as MatcherKnowledge);
+
+    return contextMatcher.findRelevantContext(
+        editorContext,
+        snippets,
+        knowledge,
+        { maxResults: 10, minScore: 15 }
+    );
+}
+
+async function injectRelevantContext() {
+    const matches = await findRelevantMatches();
+
+    if (matches.length === 0) {
+        vscode.window.showInformationMessage('No relevant context found for current file');
+        return;
+    }
+
+    const options = [
+        { label: '$(clippy) Copy to Clipboard', action: 'clipboard' },
+        { label: '$(edit) Insert at Cursor', action: 'cursor' },
+        { label: '$(github) Add to Copilot Instructions', action: 'copilot' },
+        { label: '$(file-code) Add to .cursorrules', action: 'cursor-file' }
+    ];
+
+    const selected = await vscode.window.showQuickPick(options, {
+        placeHolder: `Inject ${matches.length} relevant items - choose destination`
+    });
+
+    if (!selected) return;
+
+    switch (selected.action) {
+        case 'clipboard':
+            await contextInjector.injectToClipboard(matches);
+            vscode.window.showInformationMessage(`${matches.length} context items copied to clipboard`);
+            break;
+        case 'cursor':
+            const success = await contextInjector.injectAtCursor(matches);
+            if (success) {
+                vscode.window.showInformationMessage('Context inserted at cursor');
+            }
+            break;
+        case 'copilot':
+            const copilotSuccess = await contextInjector.injectToCopilot(matches);
+            if (copilotSuccess) {
+                vscode.window.showInformationMessage('Context added to .github/copilot-instructions.md');
+            } else {
+                vscode.window.showErrorMessage('Failed to write Copilot instructions');
+            }
+            break;
+        case 'cursor-file':
+            const cursorSuccess = await contextInjector.injectToCursor(matches);
+            if (cursorSuccess) {
+                vscode.window.showInformationMessage('Context added to .cursorrules');
+            } else {
+                vscode.window.showErrorMessage('Failed to write .cursorrules');
+            }
+            break;
+    }
+}
+
+async function addContextToClipboard() {
+    const matches = await findRelevantMatches();
+
+    if (matches.length === 0) {
+        vscode.window.showInformationMessage('No relevant context found for current file');
+        return;
+    }
+
+    await contextInjector.injectToClipboard(matches);
+    vscode.window.showInformationMessage(`${matches.length} context items copied to clipboard`);
+}
+
+async function showRelevantContextPanel() {
+    const matches = await findRelevantMatches();
+
+    if (matches.length === 0) {
+        const action = await vscode.window.showInformationMessage(
+            'No relevant context found. Would you like to search manually?',
+            'Search'
+        );
+        if (action === 'Search') {
+            showSearch();
+        }
+        return;
+    }
+
+    // Show quick pick with all matches
+    const items = matches.map(match => {
+        if (match.type === 'snippet') {
+            const snippet = match.item as Snippet;
+            return {
+                label: `$(code) ${snippet.description || snippet.language}`,
+                description: `${snippet.language} | Score: ${Math.round(match.relevanceScore)}`,
+                detail: snippet.code.substring(0, 100) + (snippet.code.length > 100 ? '...' : ''),
+                match
+            };
+        } else {
+            const knowledge = match.item as Knowledge;
+            return {
+                label: `$(book) ${knowledge.question.substring(0, 60)}`,
+                description: `Score: ${Math.round(match.relevanceScore)}`,
+                detail: match.matchReasons.map(r => r.details).join(' | '),
+                match
+            };
+        }
+    });
+
+    const selected = await vscode.window.showQuickPick(items, {
+        placeHolder: `${matches.length} relevant items found. Select to copy or press Esc to inject all.`,
+        canPickMany: true
+    });
+
+    if (selected && selected.length > 0) {
+        const selectedMatches = selected.map(s => s.match);
+        await contextInjector.injectToClipboard(selectedMatches);
+        vscode.window.showInformationMessage(`${selected.length} items copied to clipboard`);
+    }
+}
+
+async function injectToCopilot() {
+    const matches = await findRelevantMatches();
+
+    if (matches.length === 0) {
+        vscode.window.showInformationMessage('No relevant context to inject');
+        return;
+    }
+
+    const success = await contextInjector.injectToCopilot(matches);
+    if (success) {
+        vscode.window.showInformationMessage(`Added ${matches.length} items to .github/copilot-instructions.md`);
+    } else {
+        vscode.window.showErrorMessage('Failed to write Copilot instructions. Make sure you have a workspace open.');
+    }
+}
+
+async function injectToCursor() {
+    const matches = await findRelevantMatches();
+
+    if (matches.length === 0) {
+        vscode.window.showInformationMessage('No relevant context to inject');
+        return;
+    }
+
+    const success = await contextInjector.injectToCursor(matches);
+    if (success) {
+        vscode.window.showInformationMessage(`Added ${matches.length} items to .cursorrules`);
+    } else {
+        vscode.window.showErrorMessage('Failed to write .cursorrules. Make sure you have a workspace open.');
+    }
 }
 
 // Helper functions
